@@ -34,11 +34,11 @@
 		compatible = "zmk,kscan-gpio-matrix";
 		label = "KSCAN";
                 diode-direction = "row2col";
-		col-gpios
-			= <&gpiob 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-			;
 		row-gpios
-			= <&gpioc 14 GPIO_ACTIVE_HIGH>
+			= <&gpiob 4 GPIO_ACTIVE_HIGH>
+			;
+		col-gpios
+			= <&gpioc 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
 			;
 	};
 };
