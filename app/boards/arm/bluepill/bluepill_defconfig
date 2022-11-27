@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MIT
 
-CONFIG_SOC_SERIES_STM32F0X=y
-CONFIG_SOC_STM32F072XB=y
+CONFIG_SOC_SERIES_STM32F1X=y
+CONFIG_SOC_STM32F103X8=y
 # 72MHz system clock
-CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC=72000000
+CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC=8000000
 
 # Floating Point Options
 CONFIG_FPU=y
@@ -17,7 +17,7 @@ CONFIG_PINCTRL=y
 # Poll to avoid interrupt overlap issues
 CONFIG_ZMK_KSCAN_DIRECT_POLLING=y
 
-# Needed to reduce this to size that will fit on F072
+# Needed to reduce this to size that will fit on F103
 CONFIG_HEAP_MEM_POOL_SIZE=1024
 
 # clock configuration

@@ -1,0 +1,78 @@
+/*
+ * Copyright (c) 2020 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+/dts-v1/;
+#include <st/f1/stm32f103X8.dtsi>
+#include <st/f1/stm32f103r(8-b)tx-pinctrl.dtsi>
+
+/ {
+	model = "bluepill stm32";
+	compatible = "st,stm32f103c8";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,console = &cdc_acm_uart;
+		zmk,kscan = &kscan;
+	};
+
+	kscan: kscan {
+		compatible = "zmk,kscan-gpio-direct";
+		label = "KSCAN";
+
+		input-gpios
+			= <&gpiob 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+			, <&gpiob 5  (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+			;
+	};
+};
+
+&clk_hse {
+	clock-frequency = <DT_FREQ_M(8)>;
+	status = "okay";
+};
+
+&pll {
+	mul = <9>;
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(72)>;
+	ahb-prescaler = <1>;
+	apb1-prescaler = <2>;
+	apb2-prescaler = <1>;
+};
+
+&usb {
+	status = "okay";
+	pinctrl-0 = <&usb_dm_pa11 &usb_dp_pa12>;
+	pinctrl-names = "default";
+	cdc_acm_uart: cdc_acm_uart {
+		compatible = "zephyr,cdc-acm-uart";
+		label = "CDC_ACM_0";
+	};
+};
+
+&flash0 {
+	/*
+	 * For more information, see:
+	 * http://docs.zephyrproject.org/latest/guides/dts/index.html#flash-partitions
+	 */
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Set 6Kb of storage at the end of the 128Kb of flash */
+		storage_partition: partition@1e800 {
+			label = "storage";
+			reg = <0x0001e800 0x00001800>;
+		};
+	};
+};

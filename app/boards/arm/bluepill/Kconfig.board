@@ -1,0 +1,8 @@
+# byran test bluepill
+
+# Copyright (c) 2020 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+config BOARD_BLUEPILL
+	bool "bluepill"
+	depends on SOC_STM32F103X8

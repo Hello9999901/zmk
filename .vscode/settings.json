@@ -1,7 +1,9 @@
 {
   "files.associations": {
-    "*.overlay": "dts",
-    "*.keymap": "dts"
+    "*.html": "html",
+    "Kconfig": "plaintext",
+    "*.css": "tailwindcss",
+    "*.overlay": "dts"
   },
   "python.formatting.provider": "black"
 }

@@ -1,0 +1,11 @@
+identifier: bluepill
+name: bluepill stm32
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+ram: 20
+supported:
+  - switches
