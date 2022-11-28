@@ -7,6 +7,10 @@
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 
+&main_encoder {
+    status = "okay";
+};
+
 / {
     behaviors {
     };
@@ -22,6 +26,7 @@
 	&kp LSHFT           &kp Z   &kp X  &kp C  &kp V  &kp B  &kp N  &kp M  &kp COMMA &kp DOT  &kp FSLH            &kp RSHFT &kp UP
 	&kp LCTRL  &kp LGUI &kp LALT                     &kp SPACE                      &kp RALT &kp RGUI  &kp A     &kp LEFT  &kp DOWN &kp RIGHT
             >;
+            sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP>;
         };
     };
 };
