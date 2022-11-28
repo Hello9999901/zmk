@@ -1,10 +1,7 @@
 {
   "files.associations": {
-    "*.html": "html",
-    "Kconfig": "plaintext",
-    "*.css": "tailwindcss",
-    "*.overlay": "dts"
+    "*.overlay": "dts",
+    "*.keymap": "dts"
   },
-  "python.formatting.provider": "black",
-  "cmake.sourceDirectory": "${workspaceFolder}/app"
+  "python.formatting.provider": "black"
 }
