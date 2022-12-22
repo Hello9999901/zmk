@@ -44,4 +44,4 @@ If you only built and did not flash, follow Step 3 in #Flashing to upload the fi
 
 ### Further Information:
  - [Key Matrix Schematic](./Keychron%20Q2.pdf)
- - [LED Schematic](./Q2_US_Leds_.pdf)
+ - [LED Schematic](./Q2_US_Leds_.pdf) (Thank you to [@lokher](https://github.com/lokher) for the schematic)
