@@ -19,8 +19,8 @@
     keymap {
         compatible = "zmk,keymap";
 // the &mo 1 should change the layer (mac/win), and corresponds to RC(4,4) in the .dts (devicetree) file
-// default_layer is mac
-// layer_one     is win
+// default_layer is "mac"
+// layer_one     is "win"
         default_layer {
             bindings = <
     &mo 1

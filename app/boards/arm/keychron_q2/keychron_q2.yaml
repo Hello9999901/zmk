@@ -1,12 +1,10 @@
-identifier: q2test
-name: Q2 Test
+identifier: keychron_q2
+name: Keychron Q2
 type: mcu
 arch: arm
 toolchain:
   - zephyr
   - gnuarmemb
-  - xtools
 ram: 64
 flash: 128
-supported:
-  - switches
+  - keys
