@@ -4,5 +4,5 @@
 # SPDX-License-Identifier: MIT
 
 config BOARD_Q2TEST
-	bool "Keychron Q2"
-	depends on SOC_STM32L432XX
+    bool "Keychron Q2"
+    depends on SOC_STM32L432XX

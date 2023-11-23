@@ -6,15 +6,15 @@
 if BOARD_Q2TEST
 
 config BOARD
-	default "keychron_q2"
+    default "keychron_q2"
 
 config ZMK_KEYBOARD_NAME
-	default "Keychron Q2"
+    default "Keychron Q2"
 
 config ZMK_USB
-	default y
+    default y
 
 config ZMK_KSCAN_MATRIX_POLLING
-	default y
+    default y
 
 endif # BOARD_Q2TEST
