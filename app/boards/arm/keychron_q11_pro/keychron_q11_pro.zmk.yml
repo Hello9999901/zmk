@@ -1,0 +1,12 @@
+file_format: "1"
+id: keychron_q11_pro
+name: Keychron Q11 Pro
+type: board
+arch: arm
+features:
+  - keys
+  - encoder
+outputs:
+  - usb
+  - ble
+url: https://keychron.com/
