@@ -10,9 +10,9 @@
 #include <dt-bindings/zmk/outputs.h>
 #include <dt-bindings/zmk/ext_power.h>
 
-&main_encoder {
-    status = "okay";
-};
+// &main_encoder {
+//     status = "okay";
+// };
 
 / {
      keymap {
