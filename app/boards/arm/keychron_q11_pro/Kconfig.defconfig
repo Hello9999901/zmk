@@ -6,9 +6,12 @@ if BOARD_KEYCHRON_Q11_PRO
 config BOARD
     default "q11_pro"
 
-if USB_DEVICE_STACK
+if USB
 
 config USB_NRFX
+    default y
+
+config USB_DEVICE_STACK
     default y
 
 endif # USB_DEVICE_STACK
@@ -23,6 +26,6 @@ config ZMK_USB
     default y
 
 config ZMK_KEYBOARD_NAME
-    default "Keychron Q11 Pro"
+    default "Q11 Pro"
 
 endif
