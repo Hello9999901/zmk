@@ -4,4 +4,4 @@
 
 config BOARD_KEYCHRON_Q11_PRO
     bool "q11_pro"
-    depends on SOC_NRF52833_QIAA
+    depends on SOC_NRF52840_QIAA

@@ -1,7 +1,14 @@
 {
   "files.associations": {
+    "*.embeddedhtml": "html",
+    "*.html": "html",
+    "Kconfig": "plaintext",
+    "*.css": "tailwindcss",
+    "*.svelte": "svelte",
     "*.overlay": "dts",
-    "*.keymap": "dts"
+    "*.keymap": "dts",
+    "log.h": "c",
+    "behavior.h": "c"
   },
   "python.formatting.provider": "black",
   "[c]": {
