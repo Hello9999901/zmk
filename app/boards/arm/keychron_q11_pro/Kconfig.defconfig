@@ -4,7 +4,7 @@
 if BOARD_KEYCHRON_Q11_PRO
 
 config BOARD
-    default "q11_pro"
+    default "keychron_q11_pro"
 
 if USB
 
