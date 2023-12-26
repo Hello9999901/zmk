@@ -492,6 +492,16 @@ config ZMK_RTT_LOGGING
     select CONSOLE
     select RTT_CONSOLE
 
+config ZMK_UART_LOGGING
+    bool "Enable UART logging to help debug"
+    select LOG
+    select DEBUG
+    select ASSERT
+    select SERIAL
+    select SERIAL_HAS_DRIVER
+    select CONSOLE
+    select UART_CONSOLE
+
 if ZMK_RTT_LOGGING
 
 config SEGGER_RTT_BUFFER_SIZE_UP
@@ -500,7 +510,7 @@ config SEGGER_RTT_BUFFER_SIZE_UP
 #ZMK_RTT_LOGGING
 endif
 
-if ZMK_USB_LOGGING || ZMK_RTT_LOGGING
+if ZMK_USB_LOGGING || ZMK_RTT_LOGGING || ZMK_UART_LOGGING
 
 config LOG_BUFFER_SIZE
     default 8192
