@@ -79,7 +79,6 @@
     left_encoder: encoder_left {
         compatible = "alps,ec11";
         label = "LEFT_ENCODER";
-        status = "disabled";
         a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
         b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
         resolution = <4>;
@@ -100,6 +99,10 @@
         output-ohms = <1000000>; // 1M
         full-ohms = <(1000000 + 1000000)>; // 1M + 1M
     };
+};
+
+&left_encoder {
+    status = "okay";
 };
 
 &pinctrl {

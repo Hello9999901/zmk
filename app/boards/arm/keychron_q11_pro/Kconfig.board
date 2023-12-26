@@ -1,5 +1,3 @@
-# nrfmicro board configuration
-
 # SPDX-License-Identifier: MIT
 
 config BOARD_KEYCHRON_Q11_PRO_LEFT

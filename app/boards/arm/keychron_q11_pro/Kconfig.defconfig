@@ -19,7 +19,7 @@ config BOARD
 config ZMK_SPLIT
     default y
 
-default BT_CTLR
+config BT_CTLR
     default BT
 
 if USB
