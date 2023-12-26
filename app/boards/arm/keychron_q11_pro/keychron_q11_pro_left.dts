@@ -1,0 +1,210 @@
+/*
+ * Copyright (c) 2023 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+/dts-v1/;
+#include "keychron_q11_pro.dtsi"
+
+/ {
+    chosen {
+        zmk,battery = &vbatt;
+        zmk,underglow = &led_strip;
+    };
+
+    // Following keyboard scan composite driver as per: https: //zmk.dev/docs/config/kscan#example-configuration
+    kscan0: kscan_composite {
+        compatible = "zmk,kscan-composite";
+        label = "KSCAN0";
+        matrix {
+            kscan = <&kscan1>;
+        };
+        direct {
+            kscan = <&kscan2>;
+            row-offset = <6>;
+        };
+    };
+
+    // Keyboard switch matrix
+    kscan1: kscan_matrix {
+        compatible = "zmk,kscan-gpio-matrix";
+        label = "KSCAN";
+        diode-direction = "col2row";
+
+        col-gpios
+        = <&gpio0 10 (GPIO_ACTIVE_HIGH)> // L_COL_1
+        , <&gpio0 9 (GPIO_ACTIVE_HIGH)>  // L_COL_2
+        , <&gpio1 6 (GPIO_ACTIVE_HIGH)>  // L_COL_3
+        , <&gpio1 4 (GPIO_ACTIVE_HIGH)>  // L_COL_4
+        , <&gpio1 2 (GPIO_ACTIVE_HIGH)>  // L_COL_5
+        , <&gpio1 1 (GPIO_ACTIVE_HIGH)>  // L_COL_6
+        , <&gpio1 0 (GPIO_ACTIVE_HIGH)>  // L_COL_7
+        , <&gpio0 24 (GPIO_ACTIVE_HIGH)> // L_COL_8
+        ;
+
+        row-gpios
+        = <&gpio0 5  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_1
+        , <&gpio0 6  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_2
+        , <&gpio0 8  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_3
+        , <&gpio1 9  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_4
+        , <&gpio0 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_5
+        , <&gpio0 31 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_6
+        ;
+    };
+
+    // Direct GPIO scanning
+    kscan2: kscan_direct {
+        compatible = "zmk,kscan-gpio-direct";
+        toggle-mode;
+        input-gpios
+        // MAC/WIN toggle
+        = <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+        // SEL toggle
+        // @TODO: check SEL toggle voltage levels and UX
+        , <&gpio0 22 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+        ;
+    };
+
+    // @TODO: Implement https: //zmk.dev/docs/behaviors/power
+    // External power toggle for SDB pin on CKLED
+    // ext-power {
+    //         compatible = "zmk,ext-power-generic";
+    //         label = "EXT_POWER";
+    //         control-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+    //         init-delay-ms = <0>; // Optimize init delay time
+    // };
+
+    // EC11 Encoder
+    left_encoder: encoder_left {
+        compatible = "alps,ec11";
+        label = "LEFT_ENCODER";
+        status = "disabled";
+        a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        resolution = <4>;
+        steps = <80>;
+    };
+
+    // EC11 Encoder binding
+    sensors {
+        compatible = "zmk,keymap-sensors";
+        sensors = <&left_encoder>;
+    };
+
+    // Voltage divider circuit to AIN0
+    vbatt: vbatt {
+        compatible = "zmk,battery-voltage-divider";
+        label = "BATTERY";
+        io-channels = <&adc 0>;  // AIN0
+        output-ohms = <1000000>; // 1M
+        full-ohms = <(1000000 + 1000000)>; // 1M + 1M
+    };
+};
+
+&pinctrl {
+    i2c0_default: i2c0_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 26)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 27)>;
+        };
+    };
+
+    i2c0_sleep: i2c0_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 26)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 27)>;
+            low-power-enable;
+        };
+    };
+};
+
+&i2c0 {
+    compatible = "nordic,nrf-twi";
+    pinctrl-0 = <&i2c0_default>;
+    pinctrl-1 = <&i2c0_sleep>;
+    pinctrl-names = "default", "sleep";
+    status = "okay";
+
+    // Standard I2C speed of 400kHz
+    clock-frequency = <DT_FREQ_K(400)>;
+
+    led_strip: ckled2001@74 {
+        compatible = "zmk,ckled2001";
+        label = "LED_STRIP";
+        reg = <0x74>;
+        // ALL CALL
+        chain-length = < 64 >;
+        map = <
+        CK(0, 0) CK(1, 0) CK(2, 0)
+        CK(3, 0) CK(4, 0) CK(5, 0)
+        CK(6, 0) CK(7, 0) CK(8, 0)
+        CK(9, 0) CK(10, 0) CK(11, 0)
+
+        CK(0, 1) CK(1, 1) CK(2, 1)
+        CK(3, 1) CK(4, 1) CK(5, 1)
+        CK(6, 1) CK(7, 1) CK(8, 1)
+        CK(9, 1) CK(10, 1) CK(11, 1)
+
+        CK(0, 2) CK(1, 2) CK(2, 2)
+        CK(3, 2) CK(4, 2) CK(5, 2)
+        CK(6, 2) CK(7, 2) CK(8, 2)
+        CK(9, 2) CK(10, 2) CK(11, 2)
+
+        CK(0, 3) CK(1, 3) CK(2, 3)
+        CK(3, 3) CK(4, 3) CK(5, 3)
+        CK(6, 3) CK(7, 3) CK(8, 3)
+        CK(9, 3) CK(10, 3) CK(11, 3)
+
+        CK(0, 4) CK(1, 4) CK(2, 4)
+        CK(3, 4) CK(4, 4) CK(5, 4)
+        CK(6, 4) CK(7, 4) CK(8, 4)
+        CK(9, 4) CK(10, 4) CK(11, 4)
+
+        CK(0, 5) CK(1, 5) CK(2, 5)
+        CK(3, 5) CK(4, 5) CK(5, 5)
+        CK(6, 5) CK(7, 5) CK(8, 5)
+        CK(9, 5) CK(10, 5) CK(11, 5)
+
+        CK(0, 6) CK(1, 6) CK(2, 6)
+        CK(3, 6) CK(4, 6) CK(5, 6)
+        CK(6, 6) CK(7, 6) CK(8, 6)
+        CK(9, 6) CK(10, 6) CK(11, 6)
+
+        CK(0, 7) CK(1, 7) CK(2, 7)
+        CK(3, 7) CK(4, 7) CK(5, 7)
+        CK(6, 7) CK(7, 7) CK(8, 7)
+        CK(9, 7) CK(10, 7) CK(11, 7)
+
+        CK(0, 8) CK(1, 8) CK(2, 8)
+        CK(3, 8) CK(4, 8) CK(5, 8)
+        CK(6, 8) CK(7, 8) CK(8, 8)
+        CK(9, 8) CK(10, 8) CK(11, 8)
+
+        CK(0, 9) CK(1, 9) CK(2, 9)
+        CK(3, 9) CK(4, 9) CK(5, 9)
+        CK(6, 9) CK(7, 9) CK(8, 9)
+        CK(9, 9) CK(10, 9) CK(11, 9)
+
+        CK(0, 10) CK(1, 10) CK(2, 10)
+        CK(3, 10) CK(4, 10) CK(5, 10)
+        CK(6, 10) CK(7, 10) CK(8, 10)
+        CK(9, 10) CK(10, 10) CK(11, 10)
+
+        CK(0, 11) CK(1, 11) CK(2, 11)
+        CK(3, 11) CK(4, 11) CK(5, 11)
+        CK(6, 11) CK(7, 11) CK(8, 11)
+        CK(9, 11) CK(10, 11) CK(11, 11)
+
+        CK(0, 12) CK(1, 12) CK(2, 12)
+        CK(3, 12) CK(4, 12) CK(5, 12)
+        CK(6, 12) CK(7, 12) CK(8, 12)
+        CK(9, 12) CK(10, 12) CK(11, 12)
+
+        CK(0, 13) CK(1, 13) CK(2, 13)
+        CK(3, 13) CK(4, 13) CK(5, 13)
+        CK(6, 13) CK(7, 13) CK(8, 13)
+        CK(9, 13) CK(10, 13) CK(11, 13)
+        >;
+    };
+};

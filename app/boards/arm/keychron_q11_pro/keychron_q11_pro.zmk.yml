@@ -1,6 +1,7 @@
 file_format: "1"
 id: keychron_q11_pro
 name: Keychron Q11 Pro
+url: https://keychron.com/
 type: board
 arch: arm
 features:
@@ -9,4 +10,6 @@ features:
 outputs:
   - usb
   - ble
-url: https://keychron.com/
+siblings:
+  - keychron_q11_pro_left
+  - keychron_q11_pro_right

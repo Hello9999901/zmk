@@ -1,10 +1,26 @@
 # Electronut Labs Papyr board configuration
 # SPDX-License-Identifier: MIT
 
-if BOARD_KEYCHRON_Q11_PRO
+if BOARD_KEYCHRON_Q11_PRO_LEFT
+
+config ZMK_KEYBOARD_NAME
+    default "Keychron Q11 Pro"
+
+config ZMK_SPLIT_ROLE_CENTRAL
+    default y
+
+endif
+
+if BOARD_KEYCHRON_Q11_PRO_LEFT || BOARD_KEYCHRON_Q11_PRO_RIGHT
 
 config BOARD
     default "keychron_q11_pro"
+
+config ZMK_SPLIT
+    default y
+
+default BT_CTLR
+    default BT
 
 if USB
 
@@ -14,18 +30,6 @@ config USB_NRFX
 config USB_DEVICE_STACK
     default y
 
-endif # USB_DEVICE_STACK
-
-config BT_CTLR
-    default BT
-
-config ZMK_BLE
-    default y
-
-config ZMK_USB
-    default y
-
-config ZMK_KEYBOARD_NAME
-    default "Q11 Pro"
+endif
 
 endif
