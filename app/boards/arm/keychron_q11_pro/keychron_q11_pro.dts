@@ -115,8 +115,8 @@
     // ext-power {
     //         compatible = "zmk,ext-power-generic";
     //         label = "EXT_POWER";
-    //         control-gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
-    //         init-delay-ms = <50>; // Optimize init delay time
+    //         control-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+    //         init-delay-ms = <0>; // Optimize init delay time
     // };
 
     // Composite LED strip driver, unnecessary

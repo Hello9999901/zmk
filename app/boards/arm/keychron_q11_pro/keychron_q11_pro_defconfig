@@ -18,7 +18,7 @@ CONFIG_ARM_MPU=y
 CONFIG_PINCTRL=y
 
 # Control external power (SDB pin on CKLED)
-CONFIG_ZMK_EXT_POWER=y
+# CONFIG_ZMK_EXT_POWER=y
 
 # Enable I2C
 CONFIG_I2C=y
