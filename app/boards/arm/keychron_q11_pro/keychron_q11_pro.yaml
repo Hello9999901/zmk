@@ -1,5 +1,6 @@
 identifier: keychron_q11_pro
 name: Keychron Q11 Pro
+url: https://www.keychron.com/
 type: mcu
 arch: arm
 toolchain:
@@ -13,3 +14,4 @@ supported:
   - ieee802154
   - pwm
   - watchdog
+  - i2c

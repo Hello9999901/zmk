@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 The ZMK Contributors
+ * Copyright (c) 2024 Byran Huang, Keychron
  *
  * SPDX-License-Identifier: MIT
  */
@@ -51,7 +51,7 @@
         , <&gpio0 8  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_3
         , <&gpio1 9  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_4
         , <&gpio0 12 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_5
-        , <&gpio0 31 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_6
+        , <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  // L_ROW_6
         ;
     };
 

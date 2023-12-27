@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 The ZMK Contributors
+* Copyright (c) 2024 Byran Huang, Keychron
 *
 * SPDX-License-Identifier: MIT
 */
@@ -18,7 +18,7 @@
         compatible = "zmk,kscan-composite";
         label = "KSCAN0";
         columns = < 9 >;
-        rows = < 6 >;
+        rows = < 7 >;
         matrix {
             kscan = <&kscan1>;
         };

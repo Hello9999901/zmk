@@ -1,4 +1,4 @@
-# Electronut Labs Papyr board configuration
+# Copyright (c) 2024 Byran Huang, Keychron
 # SPDX-License-Identifier: MIT
 
 if BOARD_KEYCHRON_Q11_PRO_LEFT
