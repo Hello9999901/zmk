@@ -10,7 +10,7 @@
 / {
     chosen {
         zmk,battery = &vbatt;
-        zmk,underglow = &led_strip;
+        zmk,underglow = &led_strip_left;
     };
 
     // Following keyboard scan composite driver as per: https: //zmk.dev/docs/config/kscan#example-configuration
@@ -88,6 +88,9 @@
 };
 
 &left_encoder {
+    a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+    b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+    resolution = <4>;
     status = "okay";
 };
 
@@ -118,9 +121,9 @@
     // Standard I2C speed of 400kHz
     clock-frequency = <DT_FREQ_K(400)>;
 
-    led_strip: ckled2001@74 {
+    led_strip_left: ckled2001@74 {
         compatible = "zmk,ckled2001";
-        label = "LED_STRIP";
+        label = "LED_STRIP_LEFT";
         reg = <0x74>;
         // ALL CALL
         chain-length = < 64 >;

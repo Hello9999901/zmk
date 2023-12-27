@@ -20,6 +20,7 @@
         zephyr,console = &cdc_acm_uart;
         zmk,matrix_transform = &default_transform;
         zmk,kscan = &kscan0;
+        // zmk,underglow = &led_strip_comp;
     };
 
     default_transform: keymap_transform_0 {
@@ -33,7 +34,7 @@
         RC(3,0) RC(3,1) RC(3,2) RC(3,3) RC(3,4) RC(3,5) RC(3,6)         /**/          RC(3,9) RC(3,10) RC(3,11) RC(3,12) RC(3,13) RC(3,14) RC(3,15) RC(3,16)
         RC(4,0) RC(4,1) RC(4,2) RC(4,3) RC(4,4) RC(4,5) RC(4,6)         /**/          RC(4,9) RC(4,10) RC(4,11) RC(4,12) RC(4,13) RC(4,14) RC(4,15)
         RC(5,0) RC(5,1) RC(5,2) RC(5,3) RC(5,4) RC(5,5)                 /**/          RC(5,9)          RC(5,11) RC(5,12) RC(5,13) RC(5,14) RC(5,15) RC(5,16)
-        RC(6,0) RC(6,1) RC(6,2) RC(6,3)
+        RC(6,0) RC(6,1)                                                       RC(6,8) RC(6,9)
         >;
     };
 
@@ -68,21 +69,7 @@
     //         led-strip = < &led_strip_right >;
     //     };
     // };
-
 };
-
-&left_encoder {
-    a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-    b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-    resolution = <4>;
-};
-
-&right_encoder {
-    a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-    b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-    resolution = <4>;
-};
-
 
 &adc {
     status = "okay";
