@@ -77,22 +77,6 @@
     //         init-delay-ms = <0>; // Optimize init delay time
     // };
 
-    // EC11 Encoder
-    left_encoder: encoder_left {
-        compatible = "alps,ec11";
-        label = "LEFT_ENCODER";
-        a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-        b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-        resolution = <4>;
-        steps = <80>;
-    };
-
-    // EC11 Encoder binding
-    sensors {
-        compatible = "zmk,keymap-sensors";
-        sensors = <&left_encoder>;
-    };
-
     // Voltage divider circuit to AIN0
     vbatt: vbatt {
         compatible = "zmk,battery-voltage-divider";
