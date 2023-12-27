@@ -27,7 +27,7 @@
             &kp F17             &kp LCTRL        &kp LALT     &kp LGUI     &trans       &kp SPACE                 &kp SPACE /**/   &kp RGUI     &trans              &kp RCTRL           &kp LEFT            &kp DOWN            &kp RIGHT
             &mo 1               &trans    &mo 1               &trans
             >;
-            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_BRI_UP C_BRI_DN>;
         };
         layer_1 {
             // full bindings
@@ -60,7 +60,7 @@
             //     &kp SPACE           &kp RIGHT_GUI       &trans              &kp RIGHT_CONTROL   &kp LEFT_ARROW      &kp DOWN_ARROW      &kp RIGHT_ARROW
             //     &trans              &trans
             // >;
-            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp C_BRI_UP C_BRI_DN>;
         };
     };
 };
