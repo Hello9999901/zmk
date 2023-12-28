@@ -132,7 +132,7 @@
         label = "LED_STRIP_RIGHT";
         reg = <0x74>;
         // ALL CALL
-        chain-length = < 64 >;
+        chain-length = < 56 >;
         map = <
         CK(0, 0) CK(1, 0) CK(2, 0)
         CK(3, 0) CK(4, 0) CK(5, 0)
