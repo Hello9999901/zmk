@@ -50,6 +50,7 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
     UNDERGLOW_EFFECT_TEST,
+    UNDERGLOW_EFFECT_TEST2,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
@@ -66,6 +67,10 @@ static const struct device *led_strip;
 static struct led_rgb pixels[STRIP_NUM_PIXELS];
 
 static struct rgb_underglow_state state;
+
+static int profile_number;
+
+static int cnt;
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
 static const struct device *ext_power;
@@ -176,13 +181,15 @@ static void zmk_rgb_underglow_effect_swirl() {
     state.animation_step = state.animation_step % HUE_MAX;
 }
 
+void zmk_rgb_underglow_set_profile_number(int idx) { profile_number = idx; }
+
 static void zmk_rgb_underglow_effect_test() {
 
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
         hsb.b = abs(state.animation_step - 1200) / 12;
-
-        if (i == 51) {
+        // 50 is the magic number, figured out through testing
+        if (i == (50 - profile_number)) {
             hsb.h = 0;
             hsb.s = 100;
             pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
@@ -193,9 +200,39 @@ static void zmk_rgb_underglow_effect_test() {
     }
 
     // force set animation speed to (x * 10)
-    state.animation_step += 10 * 10;
+    state.animation_step += 30 * 10;
 
     if (state.animation_step > 2400) {
+        state.animation_step = 0;
+    }
+}
+
+static void zmk_rgb_underglow_effect_test2() {
+
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        struct zmk_led_hsb hsb = state.color;
+        hsb.b = abs(state.animation_step - 1200) / 12;
+        if (cnt == 2 && hsb.b == 0) {
+            cnt = 0;
+            zmk_rgb_underglow_off();
+            return;
+        }
+        // what is magic number for space bar (s)?
+        if (i == (51)) {
+            hsb.h = 120;
+            hsb.s = 100;
+            pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
+        } else {
+            hsb.b = 0;
+            pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
+        }
+    }
+
+    // force set animation speed to (x * 10)
+    state.animation_step += 40 * 10;
+
+    if (state.animation_step > 2400) {
+        cnt++;
         state.animation_step = 0;
     }
 }
@@ -216,6 +253,9 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         break;
     case UNDERGLOW_EFFECT_TEST:
         zmk_rgb_underglow_effect_test();
+        break;
+    case UNDERGLOW_EFFECT_TEST2:
+        zmk_rgb_underglow_effect_test2();
         break;
     }
 

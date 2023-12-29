@@ -19,6 +19,7 @@ int zmk_rgb_underglow_off();
 int zmk_rgb_underglow_cycle_effect(int direction);
 int zmk_rgb_underglow_calc_effect(int direction);
 int zmk_rgb_underglow_select_effect(int effect);
+void zmk_rgb_underglow_set_profile_number(int idx);
 struct zmk_led_hsb zmk_rgb_underglow_calc_hue(int direction);
 struct zmk_led_hsb zmk_rgb_underglow_calc_sat(int direction);
 struct zmk_led_hsb zmk_rgb_underglow_calc_brt(int direction);
