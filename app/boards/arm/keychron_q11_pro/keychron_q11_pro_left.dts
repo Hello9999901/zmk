@@ -68,15 +68,6 @@
         ;
     };
 
-    // @TODO: Implement https: //zmk.dev/docs/behaviors/power
-    // External power toggle for SDB pin on CKLED
-    // ext-power {
-    //         compatible = "zmk,ext-power-generic";
-    //         label = "EXT_POWER";
-    //         control-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
-    //         init-delay-ms = <0>; // Optimize init delay time
-    // };
-
     // Voltage divider circuit to AIN0
     vbatt: vbatt {
         compatible = "zmk,battery-voltage-divider";

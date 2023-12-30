@@ -189,7 +189,7 @@ static void zmk_rgb_underglow_effect_test() {
         struct zmk_led_hsb hsb = state.color;
         hsb.b = abs(state.animation_step - 1200) / 12;
         // 50 is the magic number, figured out through testing
-        if (i == (51 - profile_number)) {
+        if (i == (50 - profile_number)) {
             hsb.h = 0;
             hsb.s = 100;
             pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
