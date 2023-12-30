@@ -124,6 +124,7 @@
     led_strip: ckled2001@74 {
         compatible = "zmk,ckled2001";
         label = "LED_STRIP_LEFT";
+        sdb-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
         reg = <0x74>;
         // ALL CALL
         chain-length = < 56 >;

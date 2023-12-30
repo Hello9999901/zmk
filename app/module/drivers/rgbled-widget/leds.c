@@ -101,6 +101,7 @@ ZMK_SUBSCRIPTION(led_peripheral_listener, zmk_split_peripheral_status_changed);
 #endif // IS_ENABLED(CONFIG_ZMK_BLE)
 
 #if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 uint8_t battery_level;
 static int led_battery_listener_cb(const zmk_event_t *eh) {
     struct blink_item blink = {.duration_ms = CONFIG_RGBLED_WIDGET_OUTPUT_BLINK_MS};
@@ -140,6 +141,7 @@ ZMK_SUBSCRIPTION(led_battery_listener, zmk_battery_state_changed);
 ZMK_SUBSCRIPTION(key_press_listener, zmk_position_state_changed);
 
 #endif // IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+#endif // !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
 // #if IS_ENABLED(CONFIG_RGBLED_WIDGET_SHOW_LAYER_CHANGE)
 // #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)

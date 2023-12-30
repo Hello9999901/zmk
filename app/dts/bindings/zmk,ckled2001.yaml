@@ -12,6 +12,10 @@ properties:
     type: string
     # required: true
 
+  sdb-gpios:
+    type: phandle-array
+    required: true
+
   chain-length:
     type: int
     required: true

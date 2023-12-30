@@ -189,7 +189,7 @@ static void zmk_rgb_underglow_effect_test() {
         struct zmk_led_hsb hsb = state.color;
         hsb.b = abs(state.animation_step - 1200) / 12;
         // 50 is the magic number, figured out through testing
-        if (i == (50 - profile_number)) {
+        if (i == (51 - profile_number)) {
             hsb.h = 0;
             hsb.s = 100;
             pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
@@ -212,13 +212,14 @@ static void zmk_rgb_underglow_effect_test2() {
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
         hsb.b = abs(state.animation_step - 1200) / 12;
+        // turn off LEDs after blinking 3 times, timing so underglow off when brightness is 0
         if (cnt == 2 && hsb.b == 0) {
             cnt = 0;
             zmk_rgb_underglow_off();
             return;
         }
-        // what is magic number for space bar (s)?
-        if (i == (51)) {
+        // 11 is the magic number for space bar left
+        if (i == 11) {
             hsb.h = 120;
             hsb.s = 100;
             pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
