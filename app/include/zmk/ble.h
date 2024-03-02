@@ -34,7 +34,7 @@ bool zmk_ble_active_profile_is_open(void);
 bool zmk_ble_active_profile_is_connected(void);
 char *zmk_ble_active_profile_name(void);
 
-int zmk_ble_unpair_all(void);
+void zmk_ble_unpair_all(void);
 
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 int zmk_ble_put_peripheral_addr(const bt_addr_le_t *addr);
