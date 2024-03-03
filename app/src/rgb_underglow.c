@@ -21,10 +21,19 @@
 
 #include <zmk/activity.h>
 #include <zmk/usb.h>
+#include <zmk/ble.h>
 #include <zmk/event_manager.h>
 #include <zmk/events/activity_state_changed.h>
 #include <zmk/events/usb_conn_state_changed.h>
+#include <zmk/events/split_peripheral_status_changed.h>
 #include <zmk/workqueue.h>
+
+// Pull data sending framework if central, data receiving eventt if peripheral(s)
+#if ZMK_BLE_IS_CENTRAL
+#include <zmk/split/bluetooth/central.h>
+#elif IS_ENABLED(CONFIG_ZMK_SPLIT)
+#include <zmk/events/split_data_xfer_event.h>
+#endif
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -137,6 +146,21 @@ static struct led_rgb hsb_to_rgb(struct zmk_led_hsb hsb) {
 
     return rgb;
 }
+
+#if ZMK_BLE_IS_CENTRAL
+
+static void zmk_rgb_send_state(struct k_work *work) {
+    LOG_HEXDUMP_DBG(&state, sizeof(struct rgb_underglow_state), "RGB state");
+    int err = zmk_split_central_send_data(DATA_TAG_RGB_STATE, sizeof(struct rgb_underglow_state),
+                                          (uint8_t *)&state);
+    if (err) {
+        LOG_ERR("send failed (err %d)", err);
+    }
+}
+
+K_WORK_DEFINE(rgb_send_state_work, zmk_rgb_send_state);
+
+#endif
 
 static void zmk_rgb_underglow_effect_solid(void) {
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
@@ -262,6 +286,13 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
         break;
     }
 
+#if ZMK_BLE_IS_CENTRAL
+    // Every time the counter rolls to 0 synchronise the animations
+    if (state.animation_step == 0) {
+        k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &rgb_send_state_work);
+    }
+#endif
+
     int err = led_strip_update_rgb(led_strip, pixels, STRIP_NUM_PIXELS);
     if (err < 0) {
         LOG_ERR("Failed to update the RGB strip (%d)", err);
@@ -349,7 +380,9 @@ static int zmk_rgb_underglow_init(void) {
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
     state.on = zmk_usb_is_powered();
 #endif
-
+#if ZMK_BLE_IS_CENTRAL
+    k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &rgb_send_state_work);
+#endif
     if (state.on) {
         k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
     }
@@ -358,6 +391,10 @@ static int zmk_rgb_underglow_init(void) {
 }
 
 int zmk_rgb_underglow_save_state(void) {
+    // Send new state to peripheral when anything changes
+#if ZMK_BLE_IS_CENTRAL
+    k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &rgb_send_state_work);
+#endif
 #if IS_ENABLED(CONFIG_SETTINGS)
     int ret = k_work_reschedule(&underglow_save_work, K_MSEC(CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE));
     return MIN(ret, 0);
@@ -390,7 +427,6 @@ int zmk_rgb_underglow_on(void) {
     state.on = true;
     state.animation_step = 0;
     k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
-
     return zmk_rgb_underglow_save_state();
 }
 
@@ -554,8 +590,12 @@ static int rgb_underglow_auto_state(bool *prev_state, bool new_state) {
         return zmk_rgb_underglow_off();
     }
 }
+#endif
 
-static int rgb_underglow_event_listener(const zmk_event_t *eh) {
+#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE) ||                                          \
+    IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB) || ZMK_BLE_IS_CENTRAL
+
+static int rgb_underglow_activity_event_listener(const zmk_event_t *eh) {
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE)
     if (as_zmk_activity_state_changed(eh)) {
@@ -572,19 +612,57 @@ static int rgb_underglow_event_listener(const zmk_event_t *eh) {
     }
 #endif
 
+#if ZMK_BLE_IS_CENTRAL
+    if (as_zmk_split_peripheral_status_changed(eh)) {
+        // TODO: Have this only update when connected
+        k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &rgb_send_state_work);
+    }
+#endif
+
     return -ENOTSUP;
 }
 
-ZMK_LISTENER(rgb_underglow, rgb_underglow_event_listener);
+ZMK_LISTENER(rgb_underglow_activity, rgb_underglow_activity_event_listener);
 #endif // IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE) ||
-       // IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
+       // IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB) || ZMK_BLE_IS_CENTRAL
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE)
-ZMK_SUBSCRIPTION(rgb_underglow, zmk_activity_state_changed);
+ZMK_SUBSCRIPTION(rgb_underglow_activity, zmk_activity_state_changed);
 #endif
 
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
-ZMK_SUBSCRIPTION(rgb_underglow, zmk_usb_conn_state_changed);
+ZMK_SUBSCRIPTION(rgb_underglow_activity, zmk_usb_conn_state_changed);
+#endif
+
+#if ZMK_BLE_IS_CENTRAL
+ZMK_SUBSCRIPTION(rgb_underglow_activity, zmk_split_peripheral_status_changed);
+#endif
+
+#if IS_ENABLED(CONFIG_ZMK_SPLIT) && !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+
+static int rgb_underglow_data_event_listener(const zmk_event_t *eh) {
+    const struct zmk_split_data_xfer_event *ev = as_zmk_split_data_xfer_event(eh);
+    if (ev->data_xfer.data_tag == DATA_TAG_RGB_STATE) {
+        LOG_DBG("RGB Data received of size: %d", ev->data_xfer.data_size);
+        // Should the RGB timer be stopped and started during this operation to keep state safe?
+        LOG_HEXDUMP_DBG(ev->data_xfer.data, sizeof(struct zmk_split_data_xfer_event),
+                        "received event:");
+        static bool prev_state = false;
+        memcpy(&state, ev->data_xfer.data, sizeof(struct rgb_underglow_state));
+        LOG_HEXDUMP_DBG(&state, sizeof(struct rgb_underglow_state), "RGB state");
+        LOG_DBG("new on_state %d", state.on);
+        if (prev_state && !state.on) {
+            zmk_rgb_underglow_off();
+        } else if (!prev_state && state.on) {
+            zmk_rgb_underglow_on();
+        }
+        prev_state = state.on;
+    }
+    return 0;
+}
+
+ZMK_LISTENER(rgb_underglow_data, rgb_underglow_data_event_listener);
+ZMK_SUBSCRIPTION(rgb_underglow_data, zmk_split_data_xfer_event);
 #endif
 
 SYS_INIT(zmk_rgb_underglow_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
