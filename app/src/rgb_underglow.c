@@ -151,6 +151,7 @@ static struct led_rgb hsb_to_rgb(struct zmk_led_hsb hsb) {
 
 static void zmk_rgb_send_state(struct k_work *work) {
     LOG_HEXDUMP_DBG(&state, sizeof(struct rgb_underglow_state), "RGB state");
+    // @TODO: optimize and only send if data changes..? - Byran
     int err = zmk_split_central_send_data(DATA_TAG_RGB_STATE, sizeof(struct rgb_underglow_state),
                                           (uint8_t *)&state);
     if (err) {
@@ -210,7 +211,7 @@ static void zmk_rgb_underglow_effect_swirl(void) {
 void zmk_rgb_underglow_set_profile_number(int idx) { profile_number = idx; }
 
 static void zmk_rgb_underglow_effect_test() {
-
+#if ZMK_BLE_IS_CENTRAL
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
         hsb.b = abs(state.animation_step - 1200) / 12;
@@ -231,6 +232,21 @@ static void zmk_rgb_underglow_effect_test() {
     if (state.animation_step > 2400) {
         state.animation_step = 0;
     }
+#endif
+#if !ZMK_BLE_IS_CENTRAL
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        struct zmk_led_hsb hsb = state.color;
+        hsb.b = 0;
+        pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
+    }
+
+    // force set animation speed to (x * 10)
+    state.animation_step += 30 * 10;
+
+    if (state.animation_step > 2400) {
+        state.animation_step = 0;
+    }
+#endif
 }
 
 static void zmk_rgb_underglow_effect_test2() {
