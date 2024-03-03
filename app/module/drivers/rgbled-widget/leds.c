@@ -52,6 +52,9 @@ struct blink_item {
     uint16_t sleep_ms;
 };
 
+bool previous_underglow_on_off;
+int previous_underglow_state;
+
 // define message queue of blink work items, that will be processed by a separate thread
 K_MSGQ_DEFINE(led_msgq, sizeof(struct blink_item), 16, 4);
 
@@ -63,14 +66,26 @@ static int led_profile_listener_cb(const zmk_event_t *eh) {
     struct blink_item blink = {.duration_ms = CONFIG_RGBLED_WIDGET_OUTPUT_BLINK_MS};
     if (zmk_ble_active_profile_is_connected()) {
         LOG_INF("Profile %d connected, blinking blue", profile_index);
-        zmk_rgb_underglow_on();
-        zmk_rgb_underglow_select_effect(3);
+        if (previous_underglow_on_off == 0) {
+            LOG_ERR("Restored previous RGB On Off: %d", previous_underglow_on_off);
+            zmk_rgb_underglow_select_effect(previous_underglow_state);
+            zmk_rgb_underglow_off();
+        } else {
+            LOG_ERR("Restored previous RGB state: %d", previous_underglow_state);
+            zmk_rgb_underglow_select_effect(previous_underglow_state);
+            zmk_rgb_underglow_on();
+        }
         // blink.color = LED_BLUE;
     } else if (zmk_ble_active_profile_is_open()) {
         LOG_INF("Profile %d open, blinking yellow", profile_index);
-        zmk_rgb_underglow_on();
+        previous_underglow_state = zmk_rgb_underglow_calc_effect(0);
+        zmk_rgb_underglow_get_state(&previous_underglow_on_off);
+        LOG_ERR("Previous RGB state: %d", previous_underglow_state);
+        LOG_ERR("Previous RGB On Off: %d", previous_underglow_on_off);
+        zmk_rgb_underglow_off();
         zmk_rgb_underglow_set_profile_number(profile_index);
         zmk_rgb_underglow_select_effect(4);
+        zmk_rgb_underglow_on();
         // blink.color = LED_YELLOW;
     }
     k_msgq_put(&led_msgq, &blink, K_NO_WAIT);
@@ -111,9 +126,7 @@ static int led_battery_listener_cb(const zmk_event_t *eh) {
     if (battery_level <= 0) {
         // disconnect all BT devices, turns off underglow
         zmk_rgb_underglow_off();
-        for (int i = 0; i <= 3; i++) {
-            zmk_ble_prof_disconnect(i);
-        }
+        zmk_ble_prof_disconnect_all();
         LOG_ERR("Critically low battery level %d, shutting off", battery_level);
         k_msleep(500);
         k_panic();

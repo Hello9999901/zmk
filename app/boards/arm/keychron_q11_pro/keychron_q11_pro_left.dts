@@ -78,6 +78,10 @@
     };
 };
 
+&bootloader_key_left {
+    status = "okay";
+};
+
 &left_encoder {
     a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
     b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;

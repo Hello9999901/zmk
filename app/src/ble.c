@@ -317,6 +317,12 @@ int zmk_ble_prof_disconnect(uint8_t index) {
     return result;
 }
 
+void zmk_ble_prof_disconnect_all(void) {
+    for (int i = 0; i <= ZMK_BLE_PROFILE_COUNT; i++) {
+        zmk_ble_prof_disconnect(i);
+    }
+}
+
 bt_addr_le_t *zmk_ble_active_profile_addr(void) { return &profiles[active_profile].peer; }
 
 char *zmk_ble_active_profile_name(void) { return profiles[active_profile].name; }

@@ -111,6 +111,9 @@ static int ckled2001_init(const struct device *dev) {
 
     LOG_INF("Loaded %d channel mappings", config->map_cnt);
 
+    LOG_INF("Delaying led initialization");
+    k_msleep(200);
+
     if (!device_is_ready(config->bus.bus)) {
         LOG_ERR("I2C bus not ready: %s", config->bus.bus->name);
         return -ENODEV;
@@ -123,12 +126,14 @@ static int ckled2001_init(const struct device *dev) {
         //  return -ENODEV;
         // }
         /* Set SDB pin high to exit hardware shutdown */
+        LOG_INF("SDB pin initialization");
         ret = gpio_pin_configure_dt(&config->sdb, GPIO_OUTPUT_ACTIVE);
         if (ret < 0) {
             return ret;
         }
     }
 
+    LOG_INF("LED driver I2C communication initialization");
     // Set functions
     ckled2001_write_reg(dev, REG_SET_CMD_PAGE, FUNCTION_PAGE);
     ckled2001_write_reg(dev, REG_CONFIGRATION, MSKSW_SHUTDOWN_MODE);

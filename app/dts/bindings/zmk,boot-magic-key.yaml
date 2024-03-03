@@ -21,3 +21,6 @@ properties:
   reset-settings:
     type: boolean
     description: Clears settings and reboots.
+  simple-reset:
+    type: boolean
+    description: Only reboots

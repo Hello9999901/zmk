@@ -83,6 +83,10 @@
     col-offset = <8>;
 };
 
+&bootloader_key_right {
+    status = "okay";
+};
+
 &right_encoder {
     a-gpios = <&gpio0 13 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
     b-gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;

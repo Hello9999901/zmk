@@ -54,6 +54,8 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
+#define SYSTEM_EFFECT_NUMBER 2
+
 struct rgb_underglow_state {
     struct zmk_led_hsb color;
     uint8_t animation_speed;
@@ -424,7 +426,8 @@ int zmk_rgb_underglow_off(void) {
 }
 
 int zmk_rgb_underglow_calc_effect(int direction) {
-    return (state.current_effect + UNDERGLOW_EFFECT_NUMBER + direction) % UNDERGLOW_EFFECT_NUMBER;
+    return (state.current_effect + UNDERGLOW_EFFECT_NUMBER + direction) %
+           (UNDERGLOW_EFFECT_NUMBER - SYSTEM_EFFECT_NUMBER);
 }
 
 int zmk_rgb_underglow_select_effect(int effect) {

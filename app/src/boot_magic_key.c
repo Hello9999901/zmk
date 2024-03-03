@@ -23,6 +23,7 @@ struct boot_key_config {
     int key_position;
     bool jump_to_bootloader;
     bool reset_settings;
+    bool simple_reset;
 };
 
 #define BOOT_KEY_CONFIG(n)                                                                         \
@@ -30,6 +31,7 @@ struct boot_key_config {
         .key_position = DT_INST_PROP_OR(n, key_position, 0),                                       \
         .jump_to_bootloader = DT_INST_PROP_OR(n, jump_to_bootloader, false),                       \
         .reset_settings = DT_INST_PROP_OR(n, reset_settings, false),                               \
+        .simple_reset = DT_INST_PROP_OR(n, simple_reset, false),                                   \
     },
 
 static const struct boot_key_config boot_keys[] = {DT_INST_FOREACH_STATUS_OKAY(BOOT_KEY_CONFIG)};
@@ -47,6 +49,11 @@ static void trigger_boot_key(const struct boot_key_config *config) {
     if (config->reset_settings) {
         LOG_INF("Boot key: resetting settings");
         zmk_reset_settings();
+    }
+
+    if (config->simple_reset) {
+        LOG_INF("Boot key: simple reset");
+        zmk_reset(ZMK_RESET_WARM);
     }
 
     if (config->jump_to_bootloader) {

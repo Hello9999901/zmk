@@ -38,6 +38,20 @@
         >;
     };
 
+    bootloader_key_left: bootloader_key_left {
+        compatible = "zmk,boot-magic-key";
+        key-position = <1>;
+        simple-reset;
+        status = "disabled";
+    };
+
+    bootloader_key_right: bootloader_key_right {
+        compatible = "zmk,boot-magic-key";
+        key-position = <63>;
+        simple-reset;
+        status = "disabled";
+    };
+
     left_encoder: encoder_left {
         compatible = "alps,ec11";
         label = "LEFT_ENCODER";
