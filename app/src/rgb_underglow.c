@@ -49,6 +49,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define HUE_MAX 360
 #define SAT_MAX 100
 #define BRT_MAX 100
+#define UNDERGLOW_NORMAL_EFFECT_NUMBER 4
 
 BUILD_ASSERT(CONFIG_ZMK_RGB_UNDERGLOW_BRT_MIN <= CONFIG_ZMK_RGB_UNDERGLOW_BRT_MAX,
              "ERROR: RGB underglow maximum brightness is less than minimum brightness");
@@ -58,12 +59,13 @@ enum rgb_underglow_effect {
     UNDERGLOW_EFFECT_BREATHE,
     UNDERGLOW_EFFECT_SPECTRUM,
     UNDERGLOW_EFFECT_SWIRL,
-    UNDERGLOW_EFFECT_TEST,
-    UNDERGLOW_EFFECT_TEST2,
+    UNDERGLOW_EFFECT_BT_PAIRING,
+    UNDERGLOW_EFFECT_LOW_BATT,
+    UNDERGLOW_EFFECT_FACTORY_RESET,
     UNDERGLOW_EFFECT_NUMBER // Used to track number of underglow effects
 };
 
-#define SYSTEM_EFFECT_NUMBER 2
+#define SYSTEM_EFFECT_NUMBER 3
 
 struct rgb_underglow_state {
     struct zmk_led_hsb color;
@@ -150,7 +152,8 @@ static struct led_rgb hsb_to_rgb(struct zmk_led_hsb hsb) {
 #if ZMK_BLE_IS_CENTRAL
 
 static void zmk_rgb_send_state(struct k_work *work) {
-    LOG_HEXDUMP_DBG(&state, sizeof(struct rgb_underglow_state), "RGB state");
+    // @MYSELF: uncomment
+    // LOG_HEXDUMP_DBG(&state, sizeof(struct rgb_underglow_state), "RGB state");
     // @TODO: optimize and only send if data changes..? - Byran
     int err = zmk_split_central_send_data(DATA_TAG_RGB_STATE, sizeof(struct rgb_underglow_state),
                                           (uint8_t *)&state);
@@ -210,7 +213,7 @@ static void zmk_rgb_underglow_effect_swirl(void) {
 
 void zmk_rgb_underglow_set_profile_number(int idx) { profile_number = idx; }
 
-static void zmk_rgb_underglow_effect_test() {
+static void zmk_rgb_underglow_effect_bt_pairing() {
 #if ZMK_BLE_IS_CENTRAL
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
@@ -249,7 +252,7 @@ static void zmk_rgb_underglow_effect_test() {
 #endif
 }
 
-static void zmk_rgb_underglow_effect_test2() {
+static void zmk_rgb_underglow_effect_low_batt() {
 
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
@@ -280,6 +283,30 @@ static void zmk_rgb_underglow_effect_test2() {
     }
 }
 
+static void zmk_rgb_underglow_effect_factory_reset() {
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        struct zmk_led_hsb hsb = state.color;
+        hsb.b = abs(state.animation_step - 1200) / 12;
+        // turn off LEDs after blinking 3 times, timing so underglow off when brightness is 0
+        if (cnt == 2 && hsb.b == 0) {
+            cnt = 0;
+            zmk_rgb_underglow_off();
+            return;
+        }
+        hsb.h = 120;
+        hsb.s = 100;
+        pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
+    }
+
+    // force set animation speed to (x * 10)
+    state.animation_step += 5 * 10;
+
+    if (state.animation_step > 2400) {
+        cnt++;
+        state.animation_step = 0;
+    }
+}
+
 static void zmk_rgb_underglow_tick(struct k_work *work) {
     switch (state.current_effect) {
     case UNDERGLOW_EFFECT_SOLID:
@@ -294,11 +321,14 @@ static void zmk_rgb_underglow_tick(struct k_work *work) {
     case UNDERGLOW_EFFECT_SWIRL:
         zmk_rgb_underglow_effect_swirl();
         break;
-    case UNDERGLOW_EFFECT_TEST:
-        zmk_rgb_underglow_effect_test();
+    case UNDERGLOW_EFFECT_BT_PAIRING:
+        zmk_rgb_underglow_effect_bt_pairing();
         break;
-    case UNDERGLOW_EFFECT_TEST2:
-        zmk_rgb_underglow_effect_test2();
+    case UNDERGLOW_EFFECT_LOW_BATT:
+        zmk_rgb_underglow_effect_low_batt();
+        break;
+    case UNDERGLOW_EFFECT_FACTORY_RESET:
+        zmk_rgb_underglow_effect_factory_reset();
         break;
     }
 
@@ -406,6 +436,41 @@ static int zmk_rgb_underglow_init(void) {
     return 0;
 }
 
+int zmk_rgb_underglow_reset(void) {
+    led_strip = DEVICE_DT_GET(STRIP_CHOSEN);
+
+#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
+    if (!device_is_ready(ext_power)) {
+        LOG_ERR("External power device \"%s\" is not ready", ext_power->name);
+        return -ENODEV;
+    }
+#endif
+
+    state = (struct rgb_underglow_state){
+        color : {
+            h : CONFIG_ZMK_RGB_UNDERGLOW_HUE_START,
+            s : CONFIG_ZMK_RGB_UNDERGLOW_SAT_START,
+            b : CONFIG_ZMK_RGB_UNDERGLOW_BRT_START,
+        },
+        animation_speed : CONFIG_ZMK_RGB_UNDERGLOW_SPD_START,
+        current_effect : CONFIG_ZMK_RGB_UNDERGLOW_EFF_START,
+        animation_step : 0,
+        on : IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_ON_START)
+    };
+
+#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB)
+    state.on = zmk_usb_is_powered();
+#endif
+#if ZMK_BLE_IS_CENTRAL
+    k_work_submit_to_queue(zmk_workqueue_lowprio_work_q(), &rgb_send_state_work);
+#endif
+    if (state.on) {
+        k_timer_start(&underglow_tick, K_NO_WAIT, K_MSEC(50));
+    }
+
+    return 0;
+}
+
 int zmk_rgb_underglow_save_state(void) {
     // Send new state to peripheral when anything changes
 #if ZMK_BLE_IS_CENTRAL
@@ -478,8 +543,8 @@ int zmk_rgb_underglow_off(void) {
 }
 
 int zmk_rgb_underglow_calc_effect(int direction) {
-    return (state.current_effect + UNDERGLOW_EFFECT_NUMBER + direction) %
-           (UNDERGLOW_EFFECT_NUMBER - SYSTEM_EFFECT_NUMBER);
+    return (state.current_effect + UNDERGLOW_NORMAL_EFFECT_NUMBER + direction) %
+           (UNDERGLOW_NORMAL_EFFECT_NUMBER);
 }
 
 int zmk_rgb_underglow_select_effect(int effect) {
@@ -491,6 +556,7 @@ int zmk_rgb_underglow_select_effect(int effect) {
     }
 
     state.current_effect = effect;
+    LOG_WRN("Current effect: %d", effect);
     state.animation_step = 0;
 
     return zmk_rgb_underglow_save_state();

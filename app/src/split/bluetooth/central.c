@@ -880,7 +880,8 @@ void split_central_data_xfer_callback(struct k_work *work) {
 K_WORK_DEFINE(split_central_data_xfer_work, split_central_data_xfer_callback);
 
 static int split_bt_data_xfer_payload(struct zmk_split_data_xfer_data payload) {
-    LOG_DBG("");
+    // @MYSELF: uncomment
+    // LOG_DBG("");
 
     int err = k_msgq_put(&zmk_split_central_data_xfer_msgq, &payload, K_MSEC(100));
     if (err) {
@@ -911,7 +912,8 @@ int zmk_split_central_send_data(enum data_tag tag, uint8_t size, uint8_t *data) 
     payload.data_tag = tag;
     payload.data_size = size;
     memcpy(payload.data, data, size);
-    LOG_HEXDUMP_DBG(&payload, sizeof(struct zmk_split_data_xfer_data), "sending :");
+    // @MYSELF: uncomment
+    // LOG_HEXDUMP_DBG(&payload, sizeof(struct zmk_split_data_xfer_data), "sending :");
     return split_bt_data_xfer_payload(payload);
 }
 
