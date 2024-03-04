@@ -235,8 +235,7 @@ static void zmk_rgb_underglow_effect_bt_pairing() {
     if (state.animation_step > 2400) {
         state.animation_step = 0;
     }
-#endif
-#if !ZMK_BLE_IS_CENTRAL
+#else
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
         hsb.b = 0;
@@ -253,7 +252,7 @@ static void zmk_rgb_underglow_effect_bt_pairing() {
 }
 
 static void zmk_rgb_underglow_effect_low_batt() {
-
+#if ZMK_BLE_IS_CENTRAL
     for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
         struct zmk_led_hsb hsb = state.color;
         hsb.b = abs(state.animation_step - 1200) / 12;
@@ -281,6 +280,35 @@ static void zmk_rgb_underglow_effect_low_batt() {
         cnt++;
         state.animation_step = 0;
     }
+#else
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        struct zmk_led_hsb hsb = state.color;
+        hsb.b = abs(state.animation_step - 1200) / 12;
+        // turn off LEDs after blinking 3 times, timing so underglow off when brightness is 0
+        if (cnt == 2 && hsb.b == 0) {
+            cnt = 0;
+            zmk_rgb_underglow_off();
+            return;
+        }
+        // 31 is the magic number for space bar right
+        if (i == 31) {
+            hsb.h = 120;
+            hsb.s = 100;
+            pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
+        } else {
+            hsb.b = 0;
+            pixels[i] = hsb_to_rgb(hsb_scale_zero_max(hsb));
+        }
+    }
+
+    // force set animation speed to (x * 10)
+    state.animation_step += 40 * 10;
+
+    if (state.animation_step > 2400) {
+        cnt++;
+        state.animation_step = 0;
+    }
+#endif
 }
 
 static void zmk_rgb_underglow_effect_factory_reset() {

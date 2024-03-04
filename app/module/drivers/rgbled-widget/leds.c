@@ -117,7 +117,7 @@ static int system_checks_cb(const zmk_event_t *eh) {
     enum zmk_transport selected_transport = endpoint_instance.transport;
     LOG_WRN("Current endpoint: %d", selected_transport);
 
-    LOG_WRN("Current battery level: %d", central_battery_level);
+    LOG_WRN("Current central battery level: %d", central_battery_level);
 
     if (will_reset == 1) {
         LOG_INF("ENDED RESET");
@@ -228,6 +228,7 @@ static int led_battery_peripheral_listener_cb(const zmk_event_t *eh) {
 }
 static int system_checks_cb(const zmk_event_t *eh) {
     struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
+    LOG_WRN("Current peripheral battery level: %d", peripheral_battery_level);
     if (peripheral_battery_level <= 8) {
         LOG_ERR("Peripheral battery level %d, blinking red for critical", peripheral_battery_level);
         zmk_rgb_underglow_on();
