@@ -1,6 +1,5 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
-// #include <zephyr/drivers/led.h>
 #include <zephyr/kernel.h>
 #include <zephyr/init.h>
 #include <zephyr/bluetooth/services/bas.h>
@@ -8,33 +7,22 @@
 #include <zmk/ble.h>
 #include <zmk/endpoints.h>
 #include <zmk/keymap.h>
+#include <zmk/battery.h>
+#include <zmk/rgb_underglow.h>
 #include <zmk/events/ble_active_profile_changed.h>
 #include <zmk/split/bluetooth/peripheral.h>
 #include <zmk/events/split_peripheral_status_changed.h>
 #include <zmk/events/battery_state_changed.h>
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/events/keycode_state_changed.h>
-#include <zmk/rgb_underglow.h>
+#include <zmk/events/activity_state_changed.h>
+
 #include <zmk/reset.h>
 
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-// #define LED_GPIO_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(gpio_leds)
-
-// BUILD_ASSERT(DT_NODE_EXISTS(DT_ALIAS(led_red)), "An alias for a red LED is not found for
-// RGBLED_WIDGET"); BUILD_ASSERT(DT_NODE_EXISTS(DT_ALIAS(led_green)), "An alias for a green LED is
-// not found for RGBLED_WIDGET"); BUILD_ASSERT(DT_NODE_EXISTS(DT_ALIAS(led_blue)), "An alias for a
-// blue LED is not found for RGBLED_WIDGET");
-
-// // GPIO-based LED device and indices of red/green/blue LEDs inside its DT node
-// static const struct device *led_dev = DEVICE_DT_GET(LED_GPIO_NODE_ID);
-// static const uint8_t rgb_idx[] = {DT_NODE_CHILD_IDX(DT_ALIAS(led_red)),
-//                                   DT_NODE_CHILD_IDX(DT_ALIAS(led_green)),
-//                                   DT_NODE_CHILD_IDX(DT_ALIAS(led_blue))};
-
-// // color values as specified by an RGB bitfield
 enum color_t {
     LED_BLACK,   // 0b000
     LED_RED,     // 0b001
@@ -81,7 +69,6 @@ static int led_profile_listener_cb(const zmk_event_t *eh) {
             zmk_rgb_underglow_select_effect(previous_underglow_state);
             zmk_rgb_underglow_on();
         }
-        // blink.color = LED_BLUE;
     } else if (zmk_ble_active_profile_is_open()) {
         LOG_INF("Profile %d open, blinking yellow", profile_index);
         previous_underglow_state = zmk_rgb_underglow_calc_effect(0);
@@ -92,7 +79,6 @@ static int led_profile_listener_cb(const zmk_event_t *eh) {
         zmk_rgb_underglow_set_profile_number(profile_index);
         zmk_rgb_underglow_select_effect(4);
         zmk_rgb_underglow_on();
-        // blink.color = LED_YELLOW;
     }
     return 0;
 }
@@ -100,37 +86,22 @@ static int led_profile_listener_cb(const zmk_event_t *eh) {
 // run led_profile_listener_cb on BLE profile change (on central)
 ZMK_LISTENER(led_profile_listener, led_profile_listener_cb);
 ZMK_SUBSCRIPTION(led_profile_listener, zmk_ble_active_profile_changed);
-#else
-static int led_peripheral_listener_cb(const zmk_event_t *eh) {
-    if (zmk_split_bt_peripheral_is_connected()) {
-        LOG_INF("Peripheral connected, blinking blue");
-        // blink.color = LED_BLUE;
-    } else {
-        LOG_INF("Peripheral not connected, blinking red");
-        // blink.color = LED_RED;
-    }
-    return 0;
-}
-
-// run led_peripheral_listener_cb on peripheral status change event
-ZMK_LISTENER(led_peripheral_listener, led_peripheral_listener_cb);
-ZMK_SUBSCRIPTION(led_peripheral_listener, zmk_split_peripheral_status_changed);
 #endif
 #endif // IS_ENABLED(CONFIG_ZMK_BLE)
 
 #if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
-uint8_t battery_level;
+uint8_t central_battery_level;
 static int led_battery_listener_cb(const zmk_event_t *eh) {
     // check if we are in critical battery levels at state change, blink if we are
-    battery_level = ((struct zmk_battery_state_changed *)eh)->state_of_charge;
-    LOG_INF("Battery level callback %d percent", battery_level);
+    central_battery_level = as_zmk_battery_state_changed(eh)->state_of_charge;
+    LOG_INF("Central battery level callback %d percent", central_battery_level);
 
-    if (battery_level <= 0) {
+    if (central_battery_level <= 0) {
         // disconnect all BT devices, turns off underglow
         zmk_rgb_underglow_off();
         zmk_ble_prof_disconnect_all();
-        LOG_ERR("Critically low battery level %d, shutting off", battery_level);
+        LOG_ERR("Central critically low battery level %d, shutting off", central_battery_level);
         k_msleep(500);
         k_panic();
     }
@@ -145,6 +116,8 @@ static int system_checks_cb(const zmk_event_t *eh) {
     struct zmk_endpoint_instance endpoint_instance = zmk_endpoints_selected();
     enum zmk_transport selected_transport = endpoint_instance.transport;
     LOG_WRN("Current endpoint: %d", selected_transport);
+
+    LOG_WRN("Current battery level: %d", central_battery_level);
 
     if (will_reset == 1) {
         LOG_INF("ENDED RESET");
@@ -219,8 +192,8 @@ static int system_checks_cb(const zmk_event_t *eh) {
         }
     }
 
-    if (battery_level <= 8) {
-        LOG_ERR("Battery level %d, blinking red for critical", battery_level);
+    if (central_battery_level <= 8) {
+        LOG_ERR("Central battery level %d, blinking red for critical", central_battery_level);
         zmk_rgb_underglow_on();
         zmk_rgb_underglow_select_effect(5);
     }
@@ -234,7 +207,43 @@ ZMK_LISTENER(key_press_listener, system_checks_cb);
 ZMK_SUBSCRIPTION(led_battery_listener, zmk_battery_state_changed);
 ZMK_SUBSCRIPTION(key_press_listener, zmk_position_state_changed);
 
+#else
+
+uint8_t peripheral_battery_level;
+static int led_battery_peripheral_listener_cb(const zmk_event_t *eh) {
+    // check if we are in critical battery levels at state change, blink if we are
+    peripheral_battery_level = as_zmk_battery_state_changed(eh)->state_of_charge;
+    LOG_INF("Peripheral battery level callback %d percent", peripheral_battery_level);
+
+    if (peripheral_battery_level <= 0) {
+        // disconnect all BT devices, turns off underglow
+        zmk_rgb_underglow_off();
+        LOG_ERR("Peripheral critically low battery level %d, shutting off",
+                peripheral_battery_level);
+        k_msleep(500);
+        k_panic();
+    }
+
+    return 0;
+}
+static int system_checks_cb(const zmk_event_t *eh) {
+    struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
+    if (peripheral_battery_level <= 8) {
+        LOG_ERR("Peripheral battery level %d, blinking red for critical", peripheral_battery_level);
+        zmk_rgb_underglow_on();
+        zmk_rgb_underglow_select_effect(5);
+    }
+
+    return 0;
+}
+
+ZMK_LISTENER(key_press_listener, system_checks_cb);
+ZMK_LISTENER(led_battery_peripheral_listener, led_battery_peripheral_listener_cb);
+ZMK_SUBSCRIPTION(led_battery_peripheral_listener, zmk_battery_state_changed);
+ZMK_SUBSCRIPTION(key_press_listener, zmk_position_state_changed);
+
 #endif // IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+
 #endif // !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
 extern void led_thread(void *d0, void *d1, void *d2) {

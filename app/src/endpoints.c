@@ -110,15 +110,23 @@ int zmk_endpoints_select_transport(enum zmk_transport transport) {
     return 0;
 }
 
+int zmk_endpoints_force_transport(enum zmk_transport transport) {
+    LOG_WRN("Force selected endpoint transport %d", transport);
+
+    endpoints_save_preferred();
+
+    update_current_endpoint();
+
+    return 0;
+}
+
 int zmk_endpoints_toggle_transport(void) {
     enum zmk_transport new_transport =
         (preferred_transport == ZMK_TRANSPORT_USB) ? ZMK_TRANSPORT_BLE : ZMK_TRANSPORT_USB;
     return zmk_endpoints_select_transport(new_transport);
 }
 
-struct zmk_endpoint_instance zmk_endpoints_selected(void) {
-    return current_instance;
-}
+struct zmk_endpoint_instance zmk_endpoints_selected(void) { return current_instance; }
 
 static int send_keyboard_report(void) {
     switch (current_instance.transport) {

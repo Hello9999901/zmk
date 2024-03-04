@@ -13,7 +13,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
-
+#include <zephyr/drivers/usb_c/usbc_vbus.h>
 #include <zmk/debounce.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
@@ -178,6 +178,14 @@ static int kscan_direct_read(const struct device *dev) {
         const struct kscan_gpio *gpio = &data->inputs.gpios[i];
 
         const int active = kscan_gpio_pin_get(gpio, &state);
+
+        int vbus_enable = usbc_vbus_enable(dev, true);
+        LOG_ERR("vbus enable: %d", vbus_enable);
+        int vbus_voltage = 0;
+        int vbus_measure = usbc_vbus_measure(dev, &vbus_voltage);
+        LOG_ERR("GPIO Index: %d and GPIO State: %d", i, active);
+        LOG_ERR("VBUS Present %d", &vbus_voltage);
+
         if (active < 0) {
             LOG_ERR("Failed to read port %s: %i", gpio->spec.port->name, active);
             return active;
