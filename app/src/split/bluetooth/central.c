@@ -417,6 +417,11 @@ static uint8_t split_central_chrc_discovery_func(struct bt_conn *conn,
         slot->subscribe_params.notify = split_central_notify_func;
         slot->subscribe_params.value = BT_GATT_CCC_NOTIFY;
         split_central_subscribe(conn, &slot->subscribe_params);
+    } else if (bt_uuid_cmp(chrc_uuid, BT_UUID_DECLARE_128(ZMK_SPLIT_BT_CHAR_DATA_XFER_UUID)) == 0) {
+        LOG_DBG("Found data transfer handle");
+        slot->discover_params.uuid = NULL;
+        slot->discover_params.start_handle = attr->handle + 2;
+        slot->data_xfer_handle = bt_gatt_attr_value_handle(attr);
 #if ZMK_KEYMAP_HAS_SENSORS
     } else if (bt_uuid_cmp(chrc_uuid, BT_UUID_DECLARE_128(ZMK_SPLIT_BT_CHAR_SENSOR_STATE_UUID)) ==
                0) {
@@ -455,32 +460,11 @@ static uint8_t split_central_chrc_discovery_func(struct bt_conn *conn,
         slot->batt_lvl_read_params.single.offset = 0;
         bt_gatt_read(conn, &slot->batt_lvl_read_params);
 #endif /* IS_ENABLED(CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING) */
-    } else if (bt_uuid_cmp(chrc_uuid, BT_UUID_DECLARE_128(ZMK_SPLIT_BT_CHAR_DATA_XFER_UUID)) == 0) {
-        LOG_DBG("Found data transfer handle");
-        slot->discover_params.uuid = NULL;
-        slot->discover_params.start_handle = attr->handle + 2;
-        slot->data_xfer_handle = bt_gatt_attr_value_handle(attr);
-#if IS_ENABLED(CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING)
-    } else if (!bt_uuid_cmp(((struct bt_gatt_chrc *)attr->user_data)->uuid,
-                            BT_UUID_BAS_BATTERY_LEVEL)) {
-        LOG_DBG("Found battery level characteristics");
-        slot->batt_lvl_subscribe_params.disc_params = &slot->sub_discover_params;
-        slot->batt_lvl_subscribe_params.end_handle = slot->discover_params.end_handle;
-        slot->batt_lvl_subscribe_params.value_handle = bt_gatt_attr_value_handle(attr);
-        slot->batt_lvl_subscribe_params.notify = split_central_battery_level_notify_func;
-        slot->batt_lvl_subscribe_params.value = BT_GATT_CCC_NOTIFY;
-        split_central_subscribe(conn, &slot->batt_lvl_subscribe_params);
-
-        slot->batt_lvl_read_params.func = split_central_battery_level_read_func;
-        slot->batt_lvl_read_params.handle_count = 1;
-        slot->batt_lvl_read_params.single.handle = bt_gatt_attr_value_handle(attr);
-        slot->batt_lvl_read_params.single.offset = 0;
-        bt_gatt_read(conn, &slot->batt_lvl_read_params);
-#endif /* IS_ENABLED(CONFIG_ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING) */
     }
 
     bool subscribed =
-        slot->run_behavior_handle && slot->data_xfer_handle && slot->subscribe_params.value_handle;
+        slot->run_behavior_handle && slot->subscribe_params.value_handle && slot->data_xfer_handle;
+
 #if ZMK_KEYMAP_HAS_SENSORS
     subscribed = subscribed && slot->sensor_subscribe_params.value_handle;
 #endif /* ZMK_KEYMAP_HAS_SENSORS */
