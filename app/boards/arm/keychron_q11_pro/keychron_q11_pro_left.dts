@@ -26,6 +26,10 @@
             kscan = <&kscan2>;
             row-offset = <6>;
         };
+        direct_2 {
+            kscan = <&kscan3>;
+            row-offset = <7>;
+        };
     };
 
     // Keyboard switch matrix
@@ -56,12 +60,20 @@
     };
 
     // Direct GPIO scanning
-    kscan2: kscan_direct {
+    kscan2: kscan_direct_layer {
         compatible = "zmk,kscan-gpio-direct";
+        toggle-mode;
         input-gpios
         // MAC/WIN toggle
         = <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
-        , <&gpio1 10 (GPIO_ACTIVE_LOW)>
+        ;
+    };
+
+    kscan3: kscan_direct_sel {
+        compatible = "zmk,kscan-gpio-direct";
+        input-gpios
+        // SEL toggle
+        = <&gpio1 10 (GPIO_ACTIVE_LOW)>
         ;
     };
 

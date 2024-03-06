@@ -6,6 +6,7 @@
 
 // Out-of-tree Keychron specific features
 // Structure based on: https://github.com/caksoylar/zmk-rgbled-widget by Cem Aksoylar
+// PRs used: #2036 by ReFil and #1757 by joelspadin and #1434 by xingrz and #1433 by xingrz
 
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
