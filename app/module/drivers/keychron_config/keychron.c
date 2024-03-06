@@ -94,6 +94,10 @@ uint8_t central_battery_level;
 static int system_checks_cb(const zmk_event_t *eh) {
     struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
 
+    struct zmk_endpoint_instance endpoint_instance = zmk_endpoints_selected();
+    enum zmk_transport selected_transport = endpoint_instance.transport;
+    LOG_WRN("Current endpoint: %d", selected_transport);
+
     // reset checker
     if (will_reset == 1) {
         LOG_INF("Reset process terminated");
@@ -116,13 +120,13 @@ static int system_checks_cb(const zmk_event_t *eh) {
             if (backlight_cycle == 3) {
                 zmk_rgb_underglow_set_hsb((struct zmk_led_hsb){.h = 0, .s = 0, .b = 100}); // white
             }
-        }
-        backlight_cycle++;
-        if (backlight_cycle >= 5) {
-            testing_backlight = 0;
-            backlight_cycle = 0;
-            zmk_rgb_underglow_reset();
-            zmk_rgb_underglow_off();
+            backlight_cycle++;
+            if (backlight_cycle >= 5) {
+                testing_backlight = 0;
+                backlight_cycle = 0;
+                zmk_rgb_underglow_reset();
+                zmk_rgb_underglow_off();
+            }
         }
     }
 
@@ -287,11 +291,13 @@ extern void keychron_config_thread(void *d0, void *d1, void *d2) {
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
 static int output_selection_cb(void) {
-
     k_msleep(100);
     const struct device *dev;
     dev = DEVICE_DT_GET(DT_NODELABEL(gpio1));
-    if (gpio_pin_get(dev, 10)) {
+    int sel_pin_state = gpio_pin_get(dev, 10);
+    LOG_INF("Set keychron sel pin %d", sel_pin_state);
+    keychron_set_sel_pin(sel_pin_state);
+    if (sel_pin_state) {
         return zmk_endpoints_select_transport(ZMK_TRANSPORT_BLE);
     } else {
         return zmk_endpoints_select_transport(ZMK_TRANSPORT_USB);

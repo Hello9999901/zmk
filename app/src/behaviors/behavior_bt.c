@@ -18,27 +18,35 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include <zmk/ble.h>
 
+#include <zmk/endpoints.h>
+
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
 static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                      struct zmk_behavior_binding_event event) {
-    switch (binding->param1) {
-    case BT_CLR_CMD:
-        zmk_ble_clear_bonds();
+
+    LOG_INF("Keychron SEL pin %d", keychron_get_sel_pin());
+    if (keychron_get_sel_pin()) {
+        switch (binding->param1) {
+        case BT_CLR_CMD:
+            zmk_ble_clear_bonds();
+            return 0;
+        case BT_NXT_CMD:
+            return zmk_ble_prof_next();
+        case BT_PRV_CMD:
+            return zmk_ble_prof_prev();
+        case BT_SEL_CMD:
+            return zmk_ble_prof_select(binding->param2);
+        case BT_CLR_ALL_CMD:
+            zmk_ble_clear_all_bonds();
+            return 0;
+        case BT_DISC_CMD:
+            return zmk_ble_prof_disconnect(binding->param2);
+        default:
+            LOG_ERR("Unknown BT command: %d", binding->param1);
+        }
+    } else if (!keychron_get_sel_pin()) {
         return 0;
-    case BT_NXT_CMD:
-        return zmk_ble_prof_next();
-    case BT_PRV_CMD:
-        return zmk_ble_prof_prev();
-    case BT_SEL_CMD:
-        return zmk_ble_prof_select(binding->param2);
-    case BT_CLR_ALL_CMD:
-        zmk_ble_clear_all_bonds();
-        return 0;
-    case BT_DISC_CMD:
-        return zmk_ble_prof_disconnect(binding->param2);
-    default:
-        LOG_ERR("Unknown BT command: %d", binding->param1);
     }
 
     return -ENOTSUP;

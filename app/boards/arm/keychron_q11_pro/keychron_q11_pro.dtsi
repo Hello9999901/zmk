@@ -47,21 +47,19 @@
 
     bootloader_key_right: bootloader_key_right {
         compatible = "zmk,boot-magic-key";
-        key-position = <63>;
+        key-position = <15>;
         simple-reset;
         status = "disabled";
     };
 
     left_encoder: encoder_left {
         compatible = "alps,ec11";
-        label = "LEFT_ENCODER";
         steps = <80>;
         status = "disabled";
     };
 
     right_encoder: encoder_right {
         compatible = "alps,ec11";
-        label = "RIGHT_ENCODER";
         steps = <80>;
         status = "disabled";
     };
@@ -71,18 +69,6 @@
         sensors = <&left_encoder &right_encoder>;
         triggers-per-rotation = <20>;
     };
-
-    // led_strip_comp: led-strip-composite {
-    //     compatible = "zmk,led-strip-composite";
-    //     label = "LED_STRIP_COMP";
-    //     chain-length = < 128 >;
-    //     strip-0 {
-    //         led-strip = < &led_strip_left >;
-    //     };
-    //     strip-1 {
-    //         led-strip = < &led_strip_right >;
-    //     };
-    // };
 };
 
 &adc {

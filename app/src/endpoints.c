@@ -48,6 +48,13 @@ static int endpoints_save_preferred(void) {
 #endif
 }
 
+int keychron_sel_pin_state;
+int keychron_get_sel_pin(void) { return keychron_sel_pin_state; }
+int keychron_set_sel_pin(int sel_state) {
+    keychron_sel_pin_state = sel_state;
+    return 0;
+}
+
 bool zmk_endpoint_instance_eq(struct zmk_endpoint_instance a, struct zmk_endpoint_instance b) {
     if (a.transport != b.transport) {
         return false;
@@ -122,11 +129,13 @@ static int send_keyboard_report(void) {
     switch (current_instance.transport) {
     case ZMK_TRANSPORT_USB: {
 #if IS_ENABLED(CONFIG_ZMK_USB)
-        int err = zmk_usb_hid_send_keyboard_report();
-        if (err) {
-            LOG_ERR("FAILED TO SEND OVER USB: %d", err);
+        if (!keychron_get_sel_pin()) {
+            int err = zmk_usb_hid_send_keyboard_report();
+            if (err) {
+                LOG_ERR("FAILED TO SEND OVER USB: %d", err);
+            }
+            return err;
         }
-        return err;
 #else
         LOG_ERR("USB endpoint is not supported");
         return -ENOTSUP;
@@ -135,12 +144,14 @@ static int send_keyboard_report(void) {
 
     case ZMK_TRANSPORT_BLE: {
 #if IS_ENABLED(CONFIG_ZMK_BLE)
-        struct zmk_hid_keyboard_report *keyboard_report = zmk_hid_get_keyboard_report();
-        int err = zmk_hog_send_keyboard_report(&keyboard_report->body);
-        if (err) {
-            LOG_ERR("FAILED TO SEND OVER HOG: %d", err);
+        if (keychron_get_sel_pin()) {
+            struct zmk_hid_keyboard_report *keyboard_report = zmk_hid_get_keyboard_report();
+            int err = zmk_hog_send_keyboard_report(&keyboard_report->body);
+            if (err) {
+                LOG_ERR("FAILED TO SEND OVER HOG: %d", err);
+            }
+            return err;
         }
-        return err;
 #else
         LOG_ERR("BLE HOG endpoint is not supported");
         return -ENOTSUP;

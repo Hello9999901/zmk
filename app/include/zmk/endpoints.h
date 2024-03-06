@@ -73,3 +73,6 @@ int zmk_endpoints_send_report(uint16_t usage_page);
 #if IS_ENABLED(CONFIG_ZMK_MOUSE)
 int zmk_endpoints_send_mouse_report();
 #endif // IS_ENABLE(CONFIG_ZMK_MOUSE)
+
+int keychron_get_sel_pin(void);
+int keychron_set_sel_pin(int sel_state);
