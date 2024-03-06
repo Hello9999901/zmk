@@ -1,0 +1,2 @@
+config KEYCHRON_CONFIG
+    bool "Enable RGB LED widget for showing battery and output status"
