@@ -3,6 +3,12 @@
 # SPDX-License-Identifier: MIT
 #
 
+config BOARD_ENABLE_DCDC
+    bool "Enable DCDC mode"
+    select SOC_DCDC_NRF52X
+    default y
+    depends on BOARD_KEYCHRON_Q11_PRO_LEFT || BOARD_KEYCHRON_Q11_PRO_RIGHT
+
 config BOARD_KEYCHRON_Q11_PRO_LEFT
     bool
 
