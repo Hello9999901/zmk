@@ -122,7 +122,7 @@
             &out OUT_TOG        &kp CAPS         &kp A        &kp S        &kp D        &kp F                     &kp G /**/   &kp H        &kp J               &kp K               &kp L               &kp SEMI            &kp SQT             &kp RET             &kp HOME
             &sys_reset          &kp LSHIFT       &kp Z        &kp X        &kp C        &kp V                     &kp B /**/   &kp N        &kp M               &kp COMMA           &kp PERIOD          &kp FSLH            &kp RSHIFT          &kp UP
             &bootloader         &kp LCTRL        &kp LALT     &kp LCMD     &mo 1        &kp SPACE                       /**/   &kp SPACE    &kp RCMD            &mo 1               &kp RCTRL           &kp LEFT            &kp DOWN            &kp RIGHT
-            &mo 2               &trans           &mo 2        &trans
+            &mo 2               &out OUT_BLE
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP &inc_dec_kp C_BRI_DN C_BRI_UP>;
         };

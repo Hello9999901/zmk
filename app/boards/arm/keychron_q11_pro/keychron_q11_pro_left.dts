@@ -18,7 +18,7 @@
         compatible = "zmk,kscan-composite";
         label = "KSCAN0";
         columns = < 8 >;
-        rows = < 7 >;
+        rows = < 8 >;
         matrix {
             kscan = <&kscan1>;
         };
@@ -58,13 +58,10 @@
     // Direct GPIO scanning
     kscan2: kscan_direct {
         compatible = "zmk,kscan-gpio-direct";
-        toggle-mode;
         input-gpios
         // MAC/WIN toggle
         = <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
-        // SEL toggle
-        // @TODO: check SEL toggle voltage levels and UX
-        , <&gpio1 10 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+        , <&gpio1 10 (GPIO_ACTIVE_LOW)>
         ;
     };
 

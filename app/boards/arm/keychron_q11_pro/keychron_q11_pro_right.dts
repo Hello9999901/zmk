@@ -18,14 +18,14 @@
         compatible = "zmk,kscan-composite";
         label = "KSCAN0";
         columns = < 9 >;
-        rows = < 7 >;
+        rows = < 6 >;
         matrix {
             kscan = <&kscan1>;
         };
-        direct {
-            kscan = <&kscan2>;
-            row-offset = <6>;
-        };
+        // direct {
+        //     kscan = <&kscan2>;
+        //     row-offset = <6>;
+        // };
     };
 
     // Keyboard switch matrix
@@ -57,17 +57,17 @@
     };
 
     // Direct GPIO scanning
-    kscan2: kscan_direct {
-        compatible = "zmk,kscan-gpio-direct";
-        toggle-mode;
-        input-gpios
-        // MAC/WIN toggle
-        = <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
-        // SEL toggle
-        // @TODO: check SEL toggle voltage levels and UX
-        , <&gpio0 22 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
-        ;
-    };
+    // kscan2: kscan_direct {
+    //     compatible = "zmk,kscan-gpio-direct";
+    //     toggle-mode;
+    //     input-gpios
+    //     // MAC/WIN toggle
+    //     = <&gpio1 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+    //     // SEL toggle
+    //     // @TODO: check SEL toggle voltage levels and UX
+    //     , <&gpio0 22 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>
+    //     ;
+    // };
 
     // Voltage divider circuit to AIN0
     vbatt: vbatt {
