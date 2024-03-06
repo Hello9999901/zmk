@@ -13,6 +13,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/init.h>
 #include <zephyr/bluetooth/services/bas.h>
+#include <zephyr/drivers/gpio.h>
 
 #include <zmk/ble.h>
 #include <zmk/endpoints.h>
@@ -40,9 +41,10 @@ struct info_item {
 
 bool previous_underglow_on_off;
 int previous_underglow_state;
+// latch structure to check if 3 keys are pressed (any order is allowed)
+bool backlight_test_latch[] = {0, 0, 0};
 bool reset_latch[] = {0, 0, 0};
 bool will_reset = 0;
-bool backlight_test_latch[] = {0, 0, 0};
 bool will_backlight_test = 0;
 int backlight_cycle = 0;
 bool testing_backlight = 0;
@@ -85,29 +87,14 @@ ZMK_SUBSCRIPTION(led_profile_listener, zmk_ble_active_profile_changed);
 #endif
 #endif // IS_ENABLED(CONFIG_ZMK_BLE)
 
-#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
-#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 uint8_t central_battery_level;
-static int battery_listener_cb(const zmk_event_t *eh) {
-    // check if we are in critical battery levels at state change, info if we are
-    central_battery_level = as_zmk_battery_state_changed(eh)->state_of_charge;
-    LOG_INF("Central battery level callback %d percent", central_battery_level);
+#if IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
 
-    if (central_battery_level <= 0) {
-        // disconnect all BT devices, turns off underglow
-        zmk_rgb_underglow_off();
-        zmk_ble_prof_disconnect_all();
-        LOG_ERR("Central critically low battery level %d, shutting off", central_battery_level);
-        k_msleep(500);
-        k_panic();
-    }
-
-    return 0;
-}
-
+#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 static int system_checks_cb(const zmk_event_t *eh) {
     struct zmk_position_state_changed *ev = as_zmk_position_state_changed(eh);
 
+    // reset checker
     if (will_reset == 1) {
         LOG_INF("Reset process terminated");
         struct info_item info = {.state = 0};
@@ -115,6 +102,7 @@ static int system_checks_cb(const zmk_event_t *eh) {
         will_reset = 0;
     }
 
+    // backlight testing, red starts when hold time is triggered
     if (ev->position == 90 && ev->state == 1) {
         LOG_INF("right arrow pressed %d", ev->state);
         if (testing_backlight == 1) {
@@ -190,15 +178,36 @@ static int system_checks_cb(const zmk_event_t *eh) {
     return 0;
 }
 
-// run battery_listener_cb on battery state change event
-ZMK_LISTENER(battery_listener, battery_listener_cb);
 ZMK_LISTENER(key_press_listener, system_checks_cb);
-ZMK_SUBSCRIPTION(battery_listener, zmk_battery_state_changed);
 ZMK_SUBSCRIPTION(key_press_listener, zmk_position_state_changed);
 
-#else
+static int battery_listener_cb(const zmk_event_t *eh) {
+    // check if we are in critical battery levels at state change, info if we are
+    central_battery_level = as_zmk_battery_state_changed(eh)->state_of_charge;
+    LOG_INF("Central battery level callback %d percent", central_battery_level);
+
+    if (central_battery_level <= 0) {
+        // disconnect all BT devices, turns off underglow
+        zmk_rgb_underglow_off();
+        zmk_ble_prof_disconnect_all();
+        LOG_ERR("Central critically low battery level %d, shutting off", central_battery_level);
+        k_msleep(500);
+        k_panic();
+    }
+
+    return 0;
+}
+
+// run battery_listener_cb on battery state change event
+ZMK_LISTENER(battery_listener, battery_listener_cb);
+ZMK_SUBSCRIPTION(battery_listener, zmk_battery_state_changed);
+#endif // IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
+
+#endif // !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
 uint8_t peripheral_battery_level;
+
+#if IS_ENABLED(CONFIG_ZMK_SPLIT) && !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 static int battery_peripheral_listener_cb(const zmk_event_t *eh) {
     // check if we are in critical battery levels at state change, info if we are
     peripheral_battery_level = as_zmk_battery_state_changed(eh)->state_of_charge;
@@ -216,7 +225,6 @@ static int battery_peripheral_listener_cb(const zmk_event_t *eh) {
     return 0;
 }
 static int system_checks_cb(const zmk_event_t *eh) {
-    LOG_INF("Current peripheral battery level: %d", peripheral_battery_level);
     if (peripheral_battery_level <= 8) {
         LOG_ERR("Peripheral battery level %d, blinking red for critical", peripheral_battery_level);
         zmk_rgb_underglow_on();
@@ -231,9 +239,7 @@ ZMK_LISTENER(battery_peripheral_listener, battery_peripheral_listener_cb);
 ZMK_SUBSCRIPTION(battery_peripheral_listener, zmk_battery_state_changed);
 ZMK_SUBSCRIPTION(key_press_listener, zmk_position_state_changed);
 
-#endif // IS_ENABLED(CONFIG_ZMK_BATTERY_REPORTING)
-
-#endif // !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#endif
 
 extern void keychron_config_thread(void *d0, void *d1, void *d2) {
     ARG_UNUSED(d0);
@@ -278,6 +284,25 @@ extern void keychron_config_thread(void *d0, void *d1, void *d2) {
     }
 }
 
-// define led_thread with stack size 512, start running it 500 ms after boot
+#if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+
+static int output_selection_cb(void) {
+
+    k_msleep(100);
+    const struct device *dev;
+    dev = DEVICE_DT_GET(DT_NODELABEL(gpio1));
+    if (gpio_pin_get(dev, 10)) {
+        return zmk_endpoints_select_transport(ZMK_TRANSPORT_BLE);
+    } else {
+        return zmk_endpoints_select_transport(ZMK_TRANSPORT_USB);
+    }
+}
+
+ZMK_LISTENER(peripheral_connection_listener, output_selection_cb);
+ZMK_SUBSCRIPTION(peripheral_connection_listener, zmk_split_peripheral_status_changed);
+
+#endif
+
+// initiate configuration thread with 500ms delay and 512 stack size
 K_THREAD_DEFINE(keychron_tid, 512, keychron_config_thread, NULL, NULL, NULL,
                 K_LOWEST_APPLICATION_THREAD_PRIO, 0, 500);
