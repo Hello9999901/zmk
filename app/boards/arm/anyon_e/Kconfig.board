@@ -1,0 +1,8 @@
+# anyon_e board configuration
+
+# Copyright (c) 2024 Byran Huang
+# SPDX-License-Identifier: MIT
+
+config BOARD_ANYON_E
+    bool "anyon_e"
+    depends on SOC_NRF52840_QIAA

@@ -1,0 +1,11 @@
+file_format: "1"
+id: anyon_e
+name: anyon_e keyboard
+type: board
+arch: arm
+features:
+  - keys
+outputs:
+  - usb
+  - ble
+url: https://byran.ee

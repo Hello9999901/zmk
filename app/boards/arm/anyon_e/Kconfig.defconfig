@@ -1,0 +1,25 @@
+# Copyright (c) 2024 Byran Huang
+# SPDX-License-Identifier: MIT
+
+if BOARD_ANYON_E
+
+config BOARD
+    default "anyon_e"
+
+if USB
+
+config USB_NRFX
+    default y
+
+config USB_DEVICE_STACK
+    default y
+
+endif # USB
+
+config BT_CTLR
+    default BT
+
+config ZMK_KEYBOARD_NAME
+    default "anyon_e keyboard"
+
+endif # BOARD_ANYON_E
