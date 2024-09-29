@@ -30,7 +30,7 @@ You can refer to the [power profiler](/power-profiler) to see battery life estim
 
 ### Configuration
 
-The [new shield guide](../development/new-shield.mdx) details how to define a split keyboard shield with two parts, enabling the split feature and setting up the necessary roles for each part.
+The [new shield guide](../development/hardware-integration/new-shield.mdx) details how to define a split keyboard shield with two parts, enabling the split feature and setting up the necessary roles for each part.
 
 Also see the reference section on [split keyboards configuration](../config/system.md#split-keyboards) where the relevant symbols include `CONFIG_ZMK_SPLIT` that enables the feature, `CONFIG_ZMK_SPLIT_ROLE_CENTRAL` which sets the central role and `CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS` that sets the number of peripherals.
 
@@ -55,7 +55,7 @@ Any changes in ZMK related to split keyboard features might also necessitate doi
 
 Split keyboards with BLE-based split communications (i.e. all officially supported split keyboards) have an internal pairing procedure between the central and each peripheral.
 When the central has an open slot for a peripheral, it will advertise for connections (which will not be visible to non-ZMK devices).
-Then, any peripheral that has not yet bonded to a peripheral will pair to it.
+Then, any peripheral that has not yet bonded to a central will pair to it.
 Similar to how [bluetooth profiles](bluetooth.md) are managed between the keyboard and host devices, the bonding information will be stored with the corresponding hardware addresses of the other keyboard part, on both the central and peripheral.
 
 In practice, this means that your split keyboard parts will automatically pair and work the first time they are all on at the same time.
@@ -68,28 +68,23 @@ If the central keyboard part is either advertising for a pairing or waiting for 
 
 ## Behaviors with Locality
 
-Most ZMK [behaviors](../behaviors/index.mdx) are processed exclusively on the central of the split keyboard as it handles the keymap state and any communication with the host devices.
+Most ZMK [behaviors](../keymaps/behaviors/index.mdx) are processed exclusively on the central of the split keyboard as it handles the keymap state and any communication with the host devices.
 However, certain behaviors have "global" or "source" localities, where they can affect the peripherals when invoked.
 
 ### Global Locality Behaviors
 
 These are behaviors that affect all keyboard parts, such as changing lighting effects:
 
-- [RGB underglow behaviors](../behaviors/underglow.md)
-- [Backlight behaviors](../behaviors/backlight.md)
-- [Power management behaviors](../behaviors/power.md)
-- [Soft off behavior](../behaviors/soft-off.md)
+- [RGB underglow behaviors](../keymaps/behaviors/underglow.md)
+- [Backlight behaviors](../keymaps/behaviors/backlight.md)
+- [Power management behaviors](../keymaps/behaviors/power.md)
+- [Soft off behavior](../keymaps/behaviors/soft-off.md)
 
 ### Source Locality Behaviors
 
 These behaviors only affect the keyboard part that they are invoked from:
 
-- [Reset behaviors](../behaviors/reset.md)
-
-:::warning[Nesting behaviors with locality]
-Currently there is [an issue](https://github.com/zmkfirmware/zmk/issues/1494) preventing both global and source locality behaviors from working as expected if they are invoked from another behavior, such as a hold-tap, tap dance or a mod-morph.
-For this reason it is recommended that these behaviors are placed directly on a keymap layer.
-:::
+- [Reset behaviors](../keymaps/behaviors/reset.md)
 
 :::note[Peripheral invocation]
 Peripherals must be paired and connected to the central in order to be able to activate these behaviors, even if it is possible to trigger the behavior using only keys on a particular peripheral.
@@ -97,5 +92,5 @@ This is because the key bindings are processed on the central side which would t
 :::
 
 :::note[Combos]
-[Combos](combos.md) always invoke behaviors with source locality on the central.
+[Combos](../keymaps/combos.md) always invoke behaviors with source locality on the central.
 :::
